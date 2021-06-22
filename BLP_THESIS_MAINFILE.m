@@ -6,14 +6,38 @@
 clc;
 clear;
 
-global x_jmt beta  alpha xi_jmt w_jmt gamma omega_jmt  Total
+global x_jmt beta alpha xi_jmt Total J
 
 rand('seed',2344)    % reset uniform random number generator
 randn('seed',2344)   % reset normal random number generator
 
-%% SIMULATION SETTING
+%% SIMULATION SETTING - Generating Data
 
 % Generating the data for logit case first:
+
+% alpha = 2;                 % true alpha
+% beta  = [3,3,0.5,0.5]';         % true betas
+% gamma = [5,0.5,0.5,0.5]';         % true gamma
+% theta = [alpha; beta; gamma]; % true theta
+% 
+% I     = 200;                  % Total number of consumers in each market
+% J     = 15;                   % Initial total good in each market; some observations will be removed
+% M     = 20;                   % Total markets
+% T     = 10;                   % Total time period
+% 
+% Total = J*M*T;                % Total goods present a priori
+% 
+% x_jmt_1 = ones(Total,1);
+% x_jmt_2 = unifrnd(15,200,Total,1);
+% x_jmt_3 = unifrnd(0,1,Total,1);
+% x_jmt_4 = unifrnd(1,50,Total,1);
+% x_jmt   = [x_jmt_1 x_jmt_2 x_jmt_3 x_jmt_4]; % Generated observed product characteristics
+% 
+% w_jmt_1 = ones(Total,1);
+% w_jmt_2 = unifrnd(10,100,Total,1);
+% w_jmt_3 = unifrnd(0,1,Total,1);
+% w_jmt_4 = unifrnd(1,10,Total,1);
+% w_jmt   = [w_jmt_1 w_jmt_2 w_jmt_3 w_jmt_4]; % Generated observed cost shifters
 
 alpha = -2.5;                 % true alpha
 beta  = [3,2,5,1.5]';         % true betas
@@ -60,22 +84,23 @@ for j = 1:J
 end
 
 xi_jmt    = xi_jmt(:);                 % unobserved product characteristics vector
-omega_jmt = normrnd(5,1,Total,1);      % unobserved costs
+omega_jmt = normrnd(0,1,Total,1);      % unobserved costs
 
 mc_jmt    = w_jmt * gamma + omega_jmt; % getting marginal costs
 
-p_jmt = rand(Total,1);                 % prices (will be calculated)
 
-solveforprices = @(p_jmt) (log(p_jmt - (1./(alpha.*(1 - s_jmt(p_jmt))))) - w_jmt * gamma - omega_jmt);
+solveforprices = @(ppp) (ppp - (1./(alpha.*(1 - s_jmt(ppp)))) - mc_jmt);
 
 
-%opts      = optimset('Display','off');
-opts    = optimset('Display','iter','TolCon',1E-16,'TolFun',1E-16,'TolX',1E-16);
+%opts   = optimset('Display','off');
+ opts    = optimset('Display','iter','TolCon',1E-6,'TolFun',1E-6,'TolX',1E-10,'MaxFunEvals',1000000000); %
 
 tic
-prices  = fsolve(solveforprices,rand(Total,1),opts);
+p_jmt  = fsolve(solveforprices,ones(Total,1),opts); % this gives us prices
 toc
+% p_jmt = fminunc(solveforprices,ones(Total,1),opts);
 
+s_jmt = s_jmt(p_jmt);    % gives us market shares
 
 
 
