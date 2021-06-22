@@ -15,51 +15,27 @@ randn('seed',2344)   % reset normal random number generator
 
 % Generating the data for logit case first:
 
-% alpha = 2;                 % true alpha
-% beta  = [3,3,0.5,0.5]';         % true betas
-% gamma = [5,0.5,0.5,0.5]';         % true gamma
-% theta = [alpha; beta; gamma]; % true theta
-% 
-% I     = 200;                  % Total number of consumers in each market
-% J     = 15;                   % Initial total good in each market; some observations will be removed
-% M     = 20;                   % Total markets
-% T     = 10;                   % Total time period
-% 
-% Total = J*M*T;                % Total goods present a priori
-% 
-% x_jmt_1 = ones(Total,1);
-% x_jmt_2 = unifrnd(15,200,Total,1);
-% x_jmt_3 = unifrnd(0,1,Total,1);
-% x_jmt_4 = unifrnd(1,50,Total,1);
-% x_jmt   = [x_jmt_1 x_jmt_2 x_jmt_3 x_jmt_4]; % Generated observed product characteristics
-% 
-% w_jmt_1 = ones(Total,1);
-% w_jmt_2 = unifrnd(10,100,Total,1);
-% w_jmt_3 = unifrnd(0,1,Total,1);
-% w_jmt_4 = unifrnd(1,10,Total,1);
-% w_jmt   = [w_jmt_1 w_jmt_2 w_jmt_3 w_jmt_4]; % Generated observed cost shifters
+alpha   = 2;                    % true alpha
+beta    = [3,3,0.5,0.5]';       % true betas
+gamma   = [5,0.5,0.5,0.5]';     % true gamma
+theta   = [alpha; beta; gamma]; % true theta
 
-alpha = -2.5;                 % true alpha
-beta  = [3,2,5,1.5]';         % true betas
-gamma = [5,1,3,0.5]';         % true gamma
-theta = [alpha; beta; gamma]; % true theta
+I       = 200;                  % Total number of consumers in each market
+J       = 20;                   % Initial total good in each market; some observations will be removed
+M       = 20;                   % Total markets
+T       = 10;                   % Total time period
 
-I     = 200;                  % Total number of consumers in each market
-J     = 15;                   % Initial total good in each market; some observations will be removed
-M     = 20;                   % Total markets
-T     = 10;                   % Total time period
-
-Total = J*M*T;                % Total goods present a priori
+Total   = J*M*T;                % Total goods present a priori
 
 x_jmt_1 = ones(Total,1);
-x_jmt_2 = unifrnd(3,7,Total,1);
-x_jmt_3 = unifrnd(-1,5,Total,1);
-x_jmt_4 = unifrnd(0.5,2.5,Total,1);
+x_jmt_2 = unifrnd(1,5,Total,1);
+x_jmt_3 = unifrnd(0,1,Total,1);
+x_jmt_4 = unifrnd(-2,3,Total,1);
 x_jmt   = [x_jmt_1 x_jmt_2 x_jmt_3 x_jmt_4]; % Generated observed product characteristics
 
 w_jmt_1 = ones(Total,1);
-w_jmt_2 = unifrnd(0,2,Total,1);
-w_jmt_3 = unifrnd(0.5,1.5,Total,1);
+w_jmt_2 = unifrnd(0,1,Total,1);
+w_jmt_3 = unifrnd(-2,3,Total,1);
 w_jmt_4 = unifrnd(0.1,0.9,Total,1);
 w_jmt   = [w_jmt_1 w_jmt_2 w_jmt_3 w_jmt_4]; % Generated observed cost shifters
 
@@ -93,14 +69,23 @@ solveforprices = @(ppp) (ppp - (1./(alpha.*(1 - s_jmt(ppp)))) - mc_jmt);
 
 
 %opts   = optimset('Display','off');
- opts    = optimset('Display','iter','TolCon',1E-6,'TolFun',1E-6,'TolX',1E-10,'MaxFunEvals',1000000000); %
+ opts    = optimset('Display','iter','TolCon',1E-8,'TolFun',1E-8,'TolX',1E-10,'MaxFunEvals',1000000000); %
 
 tic
 p_jmt  = fsolve(solveforprices,ones(Total,1),opts); % this gives us prices
 toc
-% p_jmt = fminunc(solveforprices,ones(Total,1),opts);
 
-s_jmt = s_jmt(p_jmt);    % gives us market shares
+
+s_jmt = s_jmt(p_jmt);               % gives us market shares
+
+array_s_jmt  = reshape(s_jmt,J,M,T); % market share in array form
+array_p_jmt  = reshape(p_jmt,J,M,T); % prices in array form
+array_xi_jmt = reshape(xi_jmt,J,M,T); % unobs. prod. chars. in array form
+ 
+
+
+
+
 
 
 
