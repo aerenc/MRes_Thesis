@@ -1,17 +1,17 @@
-function [s__jmt] = s_jmt(p_jmt)
+function [s__jmt] = s_jmt(p)
 
-global x_jmt beta alpha xi_jmt Total
+global x_jmt beta alpha xi_jmt Total J
 
 
-delta_mt          = x_jmt * beta + alpha .* p_jmt + xi_jmt; 
-nom               = exp(delta_mt);
+delta_jmt         = x_jmt * beta - alpha .* p + xi_jmt; 
+nom               = exp(delta_jmt);
 cumsum_delta_jmt  = cumsum(nom);
-cumsum_1          = cumsum_delta_jmt(15,:);
-index             = [15:15:3000]';
+cumsum_1          = cumsum_delta_jmt(J,:);
+index             = [J:J:Total]';
 totalsum          = diff(cumsum_delta_jmt(index,:)); 
-totalsum          = [cumsum_1;totalsum];  % mt total share of each j \in J_{mt}
-Totalsum          = repelem(totalsum,15); % stretching it out to 3000*1 (since we have 15 products in each market a priori)
-denom             = ones(Total,1) + Totalsum;
+totalsum          = [cumsum_1;totalsum]; % M*T total share of each j \in J_{mt}
+Totalsum          = repelem(totalsum,J); % stretching it out to 3000*1 (since we have 15 products in each market a priori)
+denom             = 1 + Totalsum;
 s__jmt            = nom./denom;
 
 
