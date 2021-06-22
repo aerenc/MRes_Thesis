@@ -10,7 +10,7 @@ cumsum_1          = cumsum_delta_jmt(J,:);
 index             = [J:J:Total]';
 totalsum          = diff(cumsum_delta_jmt(index,:)); 
 totalsum          = [cumsum_1;totalsum]; % M*T total share of each j \in J_{mt}
-Totalsum          = repelem(totalsum,J); % stretching it out to 3000*1 (since we have 15 products in each market a priori)
+Totalsum          = repelem(totalsum,J); % stretching it out to J*M*T)*1 (since we have 15 products in each market a priori)
 denom             = 1 + Totalsum;
 s__jmt            = nom./denom;
 
