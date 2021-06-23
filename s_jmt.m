@@ -1,33 +1,70 @@
-function [s__jmt] = s_jmt(p)
+function [s___jmt] = s_jmt(p)
 
-global x_jmt beta alpha xi_jmt Total J
+global x_jmt beta alpha xi_jmt Total J M T index index2 index3 inits
 
 
-delta_jmt         = x_jmt * beta - alpha .* p + xi_jmt; 
+%delta_jmt         = zeros(Total,1);
+%epsilon_ijmt      = evrnd(0,1,Total,1) - evrnd(0,1,Total,1);
+%delta_jmt         = x_jmt * beta - alpha .* p + xi_jmt;
+
+
+delta_jmt          = zeros(Total,1);
+delta_jmt(index,:) = 0;
+
+
+for z = 1: M*T
+delta_jmt(index2(z,1):index2(z,2),:)  = x_jmt(index2(z,1):index2(z,2),:) * beta - alpha .* p(index3(z,1):index3(z,2),:) + xi_jmt(index2(z,1):index2(z,2),:);
+end
+
+
+%{
+delta_jmt(index,:)= 0; 
+%}
 nom               = exp(delta_jmt);
+%nom(index,:)     = 1;
 cumsum_delta_jmt  = cumsum(nom);
 cumsum_1          = cumsum_delta_jmt(J,:);
-index             = [J:J:Total]';
+
 totalsum          = diff(cumsum_delta_jmt(index,:)); 
 totalsum          = [cumsum_1;totalsum]; % M*T total share of each j \in J_{mt}
-Totalsum          = repelem(totalsum,J); % stretching it out to J*M*T)*1 (since we have 15 products in each market a priori)
+Totalsum          = repelem(totalsum,J); % stretching it out to (J*  M*T)*1 (since we have J products in each market a priori)
 denom             = 1 + Totalsum;
 s__jmt            = nom./denom;
+% s__jmt(index,:) = 1 ./ (1 + totalsum);
 
+s___jmt  = zeros(Total-M*T,1);
 
-
-
-
-
-
-
-
-
-
-
-
-
+for i = 1: M*T
+    
+s___jmt(index3(i,1):index3(i,2))  = s__jmt(index2(i,1):index2(i,2),1); % getting shares of inside goods
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -61,30 +98,10 @@ end
 % prices  = fsolve(solveforprices,rand(Total,1),opts);
 % toc
 % 
-% 
-% 
-% 
 
 %solveforprices = @(p) (log(p - (1./(alpha.*(1 - exp(x_jmt * beta + alpha .* p + xi_jmt)./ ...
 %    (1 + repelem([[[cumsum(exp(x_jmt * beta + alpha .* p + xi_jmt))(15,:)];...
 %    [diff(cumsum(exp(x_jmt * beta + alpha .* p + xi_jmt))(index,:))]]],15)))))) - w_jmt * gamma - omega_jmt);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 %%
 
@@ -116,8 +133,6 @@ end
 % tic
 % prices  = fsolve(solveforprices,rand(Total,1),opts);
 % toc
-% 
-
 
 
 
