@@ -1,6 +1,7 @@
-function [m_x_jmt,m_w_jmt,m_xi_jmt,m_omega_jmt,m_mc_jmt]  = simulateDataManipulated(Total,J,M,T,adj,x_jmt,w_jmt,xi_jmt,omega_jmt,m_drop_index,gamma)
+function [m_reshaped_xi_jmt,m_x_jmt,m_w_jmt,m_xi_jmt,m_omega_jmt,m_mc_jmt]  = simulateDataManipulated(Total,J,M,T,adj,x_jmt,w_jmt,xi_jmt,omega_jmt,...
+                                                                                                      m_drop_index,gamma)
 
-% Now, we drop 5 elements for each market for every time period randomly:
+% Now, I drop the first good from the first market for all of its time periods as follows:
 
 % First, we reshape the data into (J-1) * (M*T) matrices for each element of
 % x and w and dropping the elements accordingly to m_drop_index that we
@@ -67,5 +68,11 @@ m_omega_jmt = m_reshaped_omega_jmt(:);
 m_omega_jmt = m_omega_jmt(m_omega_jmt~=0);
 
 m_mc_jmt = [ones(Total-M*T-adj*M*T,1) m_w_jmt] * gamma + m_omega_jmt;                    % getting marginal costs for manipulated data
+
+
+
+
+
+
 
 end
