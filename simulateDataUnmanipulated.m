@@ -1,5 +1,6 @@
 function [x_jmt, w_jmt, xi_jmt, omega_jmt, mc_jmt] = simulateDataUnmanipulated(J,M,T,Total,gamma)
 
+global x m t extra_noise
 % excluding the outside good <=> Total - M*T
 
 x_jmt_1 = unifrnd(0,1,Total-M*T,1);
