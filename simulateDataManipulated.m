@@ -1,78 +1,25 @@
-function [m_reshaped_xi_jmt,m_x_jmt,m_w_jmt,m_xi_jmt,m_omega_jmt,m_mc_jmt]  = simulateDataManipulated(Total,J,M,T,adj,x_jmt,w_jmt,xi_jmt,omega_jmt,...
-                                                                                                      m_drop_index,gamma)
+function [x_jmt, w_jmt, xi_jmt, omega_jmt, mc_jmt]  = simulateDataManipulated(base_x_jmt,base_w_jmt,base_xi_jmt, base_omega_jmt, base_mc_jmt)
 
-% Now, I drop the first good from the first market for all of its time periods as follows:
+% Excluding the outside good                  <=> Total - M*T
+% Excluding the outside good + j,m,t = 1,1,1  <=> Total - 1 - M*T
 
-% First, we reshape the data into (J-1) * (M*T) matrices for each element of
-% x and w and dropping the elements accordingly to m_drop_index that we
-% constructed in INDEXES subsection above:
+x_jmt_1 = base_x_jmt(2:end,1);
+x_jmt_2 = base_x_jmt(2:end,2);
+x_jmt_3 = base_x_jmt(2:end,3);
+x_jmt   = [x_jmt_1 x_jmt_2 x_jmt_3];                                       % Generated observed product characteristics
 
-m_reshaped_x1_jmt    = reshape(x_jmt(:,1),J-1,M*T); 
-m_reshaped_x2_jmt    = reshape(x_jmt(:,2),J-1,M*T); 
-m_reshaped_x3_jmt    = reshape(x_jmt(:,3),J-1,M*T); 
-m_reshaped_w1_jmt    = reshape(w_jmt(:,1),J-1,M*T); 
-m_reshaped_w2_jmt    = reshape(w_jmt(:,2),J-1,M*T); 
-m_reshaped_w3_jmt    = reshape(w_jmt(:,3),J-1,M*T); 
-m_reshaped_xi_jmt    = reshape(xi_jmt,J-1,M*T); 
-m_reshaped_omega_jmt = reshape(omega_jmt,J-1,M*T);
+w_jmt_1 = base_w_jmt(2:end,1);
+w_jmt_2 = base_w_jmt(2:end,2);
+w_jmt_3 = base_w_jmt(2:end,3);
+w_jmt   = [w_jmt_1 w_jmt_2 w_jmt_3];                                       % Generated cost shifters
 
-for  i = 1 : M*T
-    m_reshaped_x1_jmt(m_drop_index(:,i),i) = 0;
-end
-for  i = 1 : M*T
-    m_reshaped_x2_jmt(m_drop_index(:,i),i) = 0;
-end
-for  i = 1 : M*T
-    m_reshaped_x3_jmt(m_drop_index(:,i),i) = 0;
-end
-for  i = 1 : M*T
-    m_reshaped_w1_jmt(m_drop_index(:,i),i) = 0;
-end
-for  i = 1 : M*T
-    m_reshaped_w2_jmt(m_drop_index(:,i),i) = 0;
-end
-for  i = 1 : M*T
-    m_reshaped_w3_jmt(m_drop_index(:,i),i) = 0;
-end
-for  i = 1 : M*T
-    m_reshaped_xi_jmt(m_drop_index(:,i),i) = 0;
-end
-for  i = 1 : M*T
-    m_reshaped_omega_jmt(m_drop_index(:,i),i) = 0;
-end
+xi_jmt  = base_xi_jmt(2:end,:);
 
-% m_ <=> manipulated:
-
-m_x1_jmt = m_reshaped_x1_jmt(:);
-m_x1_jmt = m_x1_jmt(m_x1_jmt~=0);
-m_x2_jmt = m_reshaped_x2_jmt(:);
-m_x2_jmt = m_x2_jmt(m_x2_jmt~=0);
-m_x3_jmt = m_reshaped_x3_jmt(:);
-m_x3_jmt = m_x3_jmt(m_x3_jmt~=0);
-
-m_x_jmt = [m_x1_jmt m_x2_jmt m_x3_jmt] ;
-
-m_w1_jmt = m_reshaped_w1_jmt(:);
-m_w1_jmt = m_w1_jmt(m_w1_jmt~=0);
-m_w2_jmt = m_reshaped_w2_jmt(:);
-m_w2_jmt = m_w2_jmt(m_w2_jmt~=0);
-m_w3_jmt = m_reshaped_w3_jmt(:);
-m_w3_jmt = m_w3_jmt(m_w3_jmt~=0);
-
-m_w_jmt = [m_w1_jmt m_w2_jmt m_w3_jmt];
-
-m_xi_jmt = m_reshaped_xi_jmt(:);
-m_xi_jmt = m_xi_jmt(m_xi_jmt~=0);
-
-m_omega_jmt = m_reshaped_omega_jmt(:);
-m_omega_jmt = m_omega_jmt(m_omega_jmt~=0);
-
-m_mc_jmt = [ones(Total-M*T-adj*M*T,1) m_w_jmt] * gamma + m_omega_jmt;                    % getting marginal costs for manipulated data
-
-
-
-
-
-
+omega_jmt            = base_omega_jmt(2:end,:);                            % Unobserved costs (drawn from normal distribution with no particular correlation structure)
+mc_jmt               = base_mc_jmt(2:end,:);                               % Marginal cost specification
 
 end
+
+
+
+
