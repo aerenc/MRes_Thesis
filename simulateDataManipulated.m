@@ -3,6 +3,9 @@ function [x_jmt, w_jmt, xi_jmt, omega_jmt, mc_jmt]  = simulateDataManipulated(ba
 % Excluding the outside good                  <=> Total - M*T
 % Excluding the outside good + j,m,t = 1,1,1  <=> Total - 1 - M*T
 
+% => Since we already simulated these before, we will just drop the first
+% data point from each:
+
 x_jmt_1 = base_x_jmt(2:end,1);
 x_jmt_2 = base_x_jmt(2:end,2);
 x_jmt_3 = base_x_jmt(2:end,3);
