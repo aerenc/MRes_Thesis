@@ -8,7 +8,13 @@ RC_exp(index,:) = 0;
 RC_exp(index2(1,1):index2(1,2),:)  = [ones(J-2,1) x_jmt(index3(1,1):index3(1,2),:)] * beta ...
                                                      - alpha .* p(index3(1,1):index3(1,2),:) + xi_jmt(index3(1,1):index3(1,2),:)...
                                                      + repmat(sigma(1),J-2,1) - p(index3(1,1):index3(1,2),:)*sigma(2); 
-
+                                                                     % Since this
+                                                                     % specific M*T
+                                                                     % market lacks
+                                                                     % one good
+                                                                     % compared to
+                                                                     % the other markets
+                                                                      
 for k = 2:M*T
                 RC_exp(index2(k,1):index2(k,2),:)  = [ones(J-1,1) x_jmt(index3(k,1):index3(k,2),:)] * beta ...
                                                      - alpha .* p(index3(k,1):index3(k,2),:) + xi_jmt(index3(k,1):index3(k,2),:)...
