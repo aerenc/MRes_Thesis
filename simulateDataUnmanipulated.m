@@ -17,9 +17,9 @@ w_jmt   = [w_jmt_1 w_jmt_2 w_jmt_3];                                       % Gen
 % unobserved costs. We will introduce correlation across markets, across
 % time periods, and across the same good:
 
-x       = normrnd(3,4,J-1,1);                                              % Brand-specific components
-m       = normrnd(2,2.8,M,1);                                              % Market-fixed effects
-t       = normrnd(1,1.9,T,1);                                              % Year-fixed effects
+x       = normrnd(1,3,J-1,1);                                            % Brand-specific components
+m       = normrnd(0.5,2.4,M,1);                                            % Market-fixed effects
+t       = normrnd(0.5,1.8,T,1);                                            % Year-fixed effects
 
 xi_jmt  = zeros(J-1,M,T);
 
