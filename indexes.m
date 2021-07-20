@@ -1,4 +1,4 @@
-function [base_index, base_indexx, base_index2 ,base_index3, index, indexx, index2, index3] = indexes(J,M,T,Total)
+function [base_index, base_indexx, base_index2 ,base_index3, index, indexx, index2, index3, indexxx, IDmkt] = indexes(J,M,T,Total)
 
 base_index   = [J:J:Total]';                                               % Indexing each good in every market M*T combination
 base_indexx  = [J-1:J-1:Total-M*T]';                                       % Indexing that will be used in calculating outside good share in this setting
@@ -43,6 +43,28 @@ for k = 2 : M*T
              index3(k,1) = (J-1)*(k-1);
              index3(k,2) = (J-1)*(k-1)+J-2; 
 end
+
+
+% Now produce a matrix which indicates the number of products in each
+% market (<=> "prods" in EIO1 assignment):
+
+indexxx = zeros(M*T,1);
+indexxx(1,:) = indexx(1,:) ;
+
+for   k = 2 : M*T
+   indexxx(k,:) = indexx(k,:) - indexx(k-1,:);
+end
+
+
+IDmkt = [1:1:M*T]';
+
+IDmkt = repelem(IDmkt,J-1);
+
+IDmkt = IDmkt(2:end,:);
+
+
+
+
 
 
 end
