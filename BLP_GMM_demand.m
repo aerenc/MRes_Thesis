@@ -12,16 +12,16 @@ theta2              = x0(Kbeta+1:end,1);                                   % Dev
 
 ii                  = 0;
 norm_max            = 1;
-deltavalue          = iterativedelta;    %   ~2999*1   matrix              % With this variable, we will be able to iterate and 
+deltavalue          = iterativedelta;    %   ~999*1   matrix              % With this variable, we will be able to iterate and 
                                                                            % update delta values alongside the inner loop
                                                                                               
-muvalue             = [constant price]*(theta2 .* v);                      % This represents our mu value in RC model. Here v enters
+muvalue             = [constant -price]*(theta2 .* v);                      % This represents our mu value in RC model. Here v enters
                                                                            % and allows to produce simulations for different consumers
-                        %2999*2   *      2*1  * 2*200         ~2999*200 matrix
+                        %999*2   *      2*1  * 2*100         ~999*100 matrix
      
 while norm_max > tol_inner && ii < 10000                                                      % "While" loop until convergence
 
-    simulatedshare_market            = Indicator*(exp(deltavalue + muvalue)) + 1;             % 300*1 vector containing shares of markets + 1 in simulation.
+    simulatedshare_market            = Indicator*(exp(deltavalue + muvalue)) + 1;             % 200*1 vector containing shares of markets + 1 in simulation.
                                                                                               % The variable with exp(.) contains the mean utilities 
                                                                                               % of products for consumers
                                                                                         
