@@ -2,7 +2,7 @@ function [inside_s_jmt] = base_shares(p,x_jmt,xi_jmt,index,index2,index3)
 
 global beta alpha Total J M T
 
-delta_jmt          = zeros(Total-1,1);                                     % This will be filled with mean market values
+delta_jmt          = zeros(Total,1);                                       % This will be filled with mean market values
 delta_jmt(index,:) = 0;
 
 for z = 1: M*T                                                                                         % p(rices)
