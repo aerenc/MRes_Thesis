@@ -11,7 +11,7 @@ delta_jmt(index2(1,1):index2(1,2),i)  = [ones(J-2,1) x_jmt(index3(1,1):index3(1,
                                                      - alpha .* p(index3(1,1):index3(1,2),:) + xi_jmt(index3(1,1):index3(1,2),:)...
  + repmat(sigmaa(1),J-2,1).*heterogeneity(1,i) - p(index3(1,1):index3(1,2),:)*sigmaa(2).*heterogeneity(2,i); 
 end
-                                                          % Since this specific M*T
+                                                                     % Since this specific M*T
                                                                      % market lacks
                                                                      % one good
                                                                      % compared to
@@ -37,9 +37,9 @@ Totalsum          = Totalsum(2:end,:);
 denom             = 1 + Totalsum;
 s__jmt            = nom./denom;                                            % Getting ALL shares, i.e. including s0_mt 
 
-s___jmt = mean(s__jmt,2);
+s___jmt           = mean(s__jmt,2);
 
-inside_s_jmt      = zeros(Total-M*T-1,1);                                    % Now, getting shares of inside goods
+inside_s_jmt      = zeros(Total-M*T-1,1);                                  % Now, getting shares of inside goods
 
 for i = 1: M*T
 inside_s_jmt(index3(i,1):index3(i,2))  = s___jmt(index2(i,1):index2(i,2),1);% Getting shares of inside goods
