@@ -53,7 +53,7 @@ gg                = IV' * error_J;                                         % Mom
 
 
 %% Supply Side
-
+                                %I
 alpha_i   = theta1(5,1).*ones(1,I) - theta2(2,1).*v_J(2,:);         % Individual specific alpha term 
 
 RCderivative = zeros(Total-M*T-1,1);  % YOKSA MINUS MI KOYMAM GEREKIYOR "mean" IFADESININ BASINA??
