@@ -21,7 +21,7 @@ totalsum          = [cumsum_1;totalsum];                                   % M*T
 Totalsum          = repelem(totalsum,J);                                   % Stretching it out to (J*M*T)*1 (since we have J-1 products in each market)
 Totalsum          = Totalsum(2:end,:);
 
-denom             = 1 + Totalsum;
+denom             = Totalsum;
 s__jmt            = nom./denom;                                            % Getting ALL shares, i.e. including s0_mt 
 
 inside_s_jmt      = zeros(Total-M*T-1,1);                                  % Now, getting shares of inside goods
