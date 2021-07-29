@@ -1,6 +1,6 @@
 function ff = BLP_GMM_joint(x0)
 
-global W tol_inner Kbeta iterativedelta v_J Indicator share IV A price constant indexxx error_J Ktheta z gg zero marginalcost I zeta Total M T 
+global W tol_inner Kbeta iterativedelta Indicator share IV v A price constant indexxx error_J Ktheta z gg zero marginalcost zeta Total M T unobs_cost ns alpha_i simulatedshare RCderivative
 
 
 theta1              = x0(1:Kbeta,1);                                                       % Mean tastes
@@ -16,9 +16,9 @@ norm_max            = 1;
 deltavalue          = iterativedelta;    %   ~999*1   matrix              % With this variable, we will be able to iterate and 
                                                                            % update delta values alongside the inner loop
                                                                                               
-muvalue             = [constant -price]*(theta2 .* v_J);                      % This represents our mu value in RC model. Here v enters
+muvalue             = -price*(theta2 .* v);                      % This represents our mu value in RC model. Here v enters
                                                                            % and allows to produce simulations for different consumers
-                        %999*2   *      2*1  * 2*100         ~999*100 matrix
+                        %999*1   *      1*1  * 1*100         ~999*100 matrix
      
 while norm_max > tol_inner && ii < 10000                                                      % "While" loop until convergence
 
@@ -54,17 +54,14 @@ gg                = IV' * error_J;                                         % Mom
 
 %% Supply Side
                                 %I
-alpha_i   = theta1(5,1).*ones(1,I) - theta2(2,1).*v_J(2,:);         % Individual specific alpha term 
+alpha_i   = theta1(5,1).*ones(1,ns) - theta2(1,1).*v(1,:);         % Individual specific alpha term 
 
 RCderivative = zeros(Total-M*T-1,1);  % YOKSA MINUS MI KOYMAM GEREKIYOR "mean" IFADESININ BASINA??
 for        j = 1:Total-M*T-1
            RCderivative(j,:) = mean(alpha_i.*simulatedshare(j,:).*(1 - simulatedshare(j,:))); % gathering ds/dp from RC elasticity definition
 end                           
 
-unobs_cost   = price - share./RCderivative - [constant z]*gamma;  % Getting unonbserved costs
-
-% unobs_cost   = price - 1./(alpha.*(1-mean(simulatedshare,2))) - [constant z]*gamma;  % Getting unonbserved costs
-
+unobs_cost   = price + share./RCderivative - [constant z]*gamma;  % Getting unonbserved costs
 
 zeta         = IV' * unobs_cost;                                  % Moment function to be minimized
 jointmoment  = [gg;zeta];                                         % Getting moments together 
