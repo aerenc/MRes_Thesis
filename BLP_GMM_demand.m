@@ -15,9 +15,9 @@ norm_max            = 1;
 deltavalue          = iterativedelta;    %   ~999*1   matrix              % With this variable, we will be able to iterate and 
                                                                            % update delta values alongside the inner loop
                                                                                               
-muvalue             = [constant -price]*(theta2 .* v);                      % This represents our mu value in RC model. Here v enters
+muvalue             = -price*(theta2 .* v);                      % This represents our mu value in RC model. Here v enters
                                                                            % and allows to produce simulations for different consumers
-                        %999*2   *      2*1  * 2*100         ~999*100 matrix
+                        %999*2   *      1*1  * 1*100         ~999*100 matrix
      
 while norm_max > tol_inner && ii < 10000                                                      % "While" loop until convergence
 
