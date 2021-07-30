@@ -23,10 +23,10 @@ randn('seed',44);
 % Generating the data for logit case first, we will extend the required data for the RC logit:
 
 alpha         = 2;                    % True alpha
-beta          = [3,3,0.5,0.5]';       % True betas (B0 ; B1 ; B2 ; B3)
+beta          = [5,3,0.5,0.5]';       % True betas (B0 ; B1 ; B2 ; B3)
 gamma         = [5,0.5,0.5,0.5]';     % True gamma
 
-I             = 50;                   % Total number of consumers in each market (will be used in estimation part)
+I             = 30;                   % Total number of consumers in each market (will be used in estimation part)
 J             = 6;                    % Initial total good + outside share in each market
 M             = 20;                   % Total markets
 T             = 10;                   % Total time period
@@ -36,7 +36,7 @@ one           = 1;
 
 
 opt      = optimset('Display','iter','TolCon',1E-6,'TolFun',1E-10,'TolX',1E-10);
-sigmaa   = [0.5]';                                                         % Heterogeneity term for RC logit (for price)
+sigmaa   = 0.5;                                                            % Heterogeneity term for RC logit (for price)
 theta    = [beta;-alpha;sigmaa;gamma];                                     % True theta
 %% CONSTRUCTING INDEXES:
 
@@ -111,7 +111,7 @@ share = REALDATA(:,8);
 
 constant  = ones(Total-M*T-1,1);                                           % Creating constant for regression   
 tol_inner = 1.e-14;                                                        % Tolerance for inner loop (NFXP)
-ns        = 100;
+ns        = 50;
 Kbeta     = 2+size(A,2);                                                   % =5(constant&price&prod. characteristics) - # of parameters in mean utility
 Ktheta    = 1;                                                             % =2(price&constant)          - # of parameters with random coefficient
 v         = randn(Ktheta,ns);                                              % Draws for share integrals during estimation
