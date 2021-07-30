@@ -9,7 +9,7 @@ delta_mu_jmt(index,:) = 0;
 for i = 1:I
 delta_mu_jmt(index2(1,1):index2(1,2),i)  = [ones(J-2,1) x_jmt(index3(1,1):index3(1,2),:)] * beta ...
                                                      - alpha .* p(index3(1,1):index3(1,2),:) + xi_jmt(index3(1,1):index3(1,2),:)...
-  - p(index3(1,1):index3(1,2),:)*sigmaa(1)*heterogeneity(1,i); 
+  - p(index3(1,1):index3(1,2),:)*sigmaa*heterogeneity(1,i); 
 end
                                                                      % Since this specific M*T
                                                                      % market lacks
@@ -21,7 +21,7 @@ for k = 2:M*T
     for i = 1:I
                 delta_mu_jmt(index2(k,1):index2(k,2),i)  = [ones(J-1,1) x_jmt(index3(k,1):index3(k,2),:)] * beta ...
                                                      - alpha .* p(index3(k,1):index3(k,2),:) + xi_jmt(index3(k,1):index3(k,2),:)...
-  - p(index3(k,1):index3(k,2),:)*sigmaa(1)*heterogeneity(1,i);   
+  - p(index3(k,1):index3(k,2),:)*sigmaa*heterogeneity(1,i);   
     end
 end
 
