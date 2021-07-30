@@ -22,16 +22,16 @@ randn('seed',44);
 
 % Generating the data for logit case first, we will extend the required data for the RC logit:
 
-alpha         = 2;                    % True alpha
-beta          = [5,3,0.5,0.5]';       % True betas (B0 ; B1 ; B2 ; B3)
-gamma         = [5,0.5,0.5,0.5]';     % True gamma
+alpha         = 2;                                                         % True alpha
+beta          = [5,3,0.5,0.5]';                                            % True betas (B0 ; B1 ; B2 ; B3)
+gamma         = [5,0.5,0.5,0.5]';                                          % True gamma
 
-I             = 30;                   % Total number of consumers in each market (will be used in estimation part)
-J             = 6;                    % Initial total good + outside share in each market
-M             = 20;                   % Total markets
-T             = 10;                   % Total time period
-Total         = J*M*T;                % Total goods present "a priori" i.e. "real" data + first good in first market at first time period,
-                                      % INCLUDING outside goods for each M*T market-time combo
+I             = 50;                                                        % Total number of consumers in each market (will be used in estimation part)
+J             = 6;                                                         % Initial total good + outside share in each market
+M             = 20;                                                        % Total markets
+T             = 10;                                                        % Total time period
+Total         = J*M*T;                                                     % Total goods present "a priori" i.e. "real" data + first good in first market at first time period,
+                                                                           % INCLUDING outside goods for each M*T market-time combo
 one           = 1;
 
 
@@ -111,7 +111,7 @@ share = REALDATA(:,8);
 
 constant  = ones(Total-M*T-1,1);                                           % Creating constant for regression   
 tol_inner = 1.e-14;                                                        % Tolerance for inner loop (NFXP)
-ns        = 50;
+ns        = 100;
 Kbeta     = 2+size(A,2);                                                   % =5(constant&price&prod. characteristics) - # of parameters in mean utility
 Ktheta    = 1;                                                             % =2(price&constant)          - # of parameters with random coefficient
 v         = randn(Ktheta,ns);                                              % Draws for share integrals during estimation
@@ -184,9 +184,9 @@ mc_J           = marginalcost;
 
 theta1J        = X_J(1:Kbeta,1);                                           % Estimated Mean Tastes
 
-theta2J        = X_J(Kbeta+1:Kbeta+Ktheta,1);           % Estimated Deviations from Mean Taste
+theta2J        = X_J(Kbeta+1:Kbeta+Ktheta,1);                              % Estimated Deviations from Mean Taste
 
-gammaJ         = X_J(Kbeta+Ktheta+1:Kbeta+Ktheta+Kmc);  % MC estimates
+gammaJ         = X_J(Kbeta+Ktheta+1:Kbeta+Ktheta+Kmc);                     % MC estimates
 
 theta_J        = [theta1J; theta2J];
 
@@ -209,6 +209,9 @@ sterrors_j      = [sterrorsQ2D; sterrorsQ2S];                              % Sta
 
 clear Grad2 Grad3 varianceestQ2D sterrorsQ2D varianceestQ2S sterrorsQ2S s_ijmt ds_dp demandmoment_J supplymoment_J
 %% 3 - COUNTERFACTUAL ANALYSIS:
+
+% Here, I insert the "missing" first good in M=1&T=1 to that market itself
+% to check new prices, shares, profits, and CS:
 
 x_111 = base_x_jmt(1,:);
 w_111 = base_w_jmt(1,:);
@@ -244,7 +247,7 @@ third_xi    = normrnd(estims_xi(1,:),se_xi(1,:),100,1) + normrnd(estims_xi(2,:),
 
 first_xi_R  = xi_jmt(first_index,:);
 second_xi_R = xi_jmt(second_index,:);
-third_xi_R  = xi_jmt(1:100,:); 
+third_xi_R  = normrnd(0,2.4,100,1) + normrnd(0,1.6,100,1) + normrnd(0,1.2,100,1) + normrnd(0,0.5,100,1);
 
 first_xi_M  = mean(first_xi);
 second_xi_M = mean(second_xi);
@@ -294,5 +297,141 @@ toc
 s_jmt_third_xi(k,:) = sharescalculator_RC_counterfactual(p_jmt_third_xi(k,:)',third_xi(k,:));
 
 end
+
+
+% Now calculate the new equilibrium prices and shares for the MEAN of those
+% xi specifications:
+
+
+solveforprices_first_xi_M    = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi_M) - mc_est);
+    
+tic
+p_jmt_first_xi_M          = fsolve(solveforprices_first_xi_M,inits_xi,opt);             
+toc
+
+s_jmt_first_xi_M = sharescalculator_RC_counterfactual(p_jmt_first_xi_M,first_xi_M);
+
+
+solveforprices_second_xi_M    = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi_M) - mc_est);
+    
+tic
+p_jmt_second_xi_M          = fsolve(solveforprices_second_xi_M,inits_xi,opt);             
+toc
+
+s_jmt_second_xi_M = sharescalculator_RC_counterfactual(p_jmt_first_xi_M,second_xi_M);
+
+
+
+solveforprices_third_xi_M    = @(pppp) (pppp -shares_RC_counterfactual(pppp,third_xi_M) - mc_est);
+    
+tic
+p_jmt_third_xi_M             = fsolve(solveforprices_third_xi_M,inits_xi,opt);             
+toc
+
+s_jmt_third_xi_M             = sharescalculator_RC_counterfactual(p_jmt_first_xi_M,third_xi_M);
+
+% Lastly, calculate those profits & shares for the REAL values of xi:
+
+for k = 1: size(first_xi_R,1)
+    
+solveforprices_first_xi_R    = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi_R(k,:)) - mc_est);
+    
+tic
+p_jmt_first_xi_R(k,:)                = fsolve(solveforprices_first_xi_R,inits_xi,opt);             
+toc
+
+s_jmt_first_xi_R(k,:) = sharescalculator_RC_counterfactual(p_jmt_first_xi_R(k,:)',first_xi_R(k,:));
+
+end
+
+for k = 1: size(second_xi_R,1)
+    
+solveforprices_second_xi_R    = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi_R(k,:)) - mc_est);
+    
+tic
+p_jmt_second_xi_R(k,:)                = fsolve(solveforprices_second_xi_R,inits_xi,opt);             
+toc
+
+s_jmt_second_xi_R(k,:) = sharescalculator_RC_counterfactual(p_jmt_second_xi_R(k,:)',second_xi_R(k,:));
+
+end
+
+for k = 1: size(third_xi_R,1)
+    
+solveforprices_third_xi_R    = @(pppp) (pppp -shares_RC_counterfactual(pppp,third_xi_R(k,:)) - mc_est);
+    
+tic
+p_jmt_third_xi_R(k,:)                = fsolve(solveforprices_third_xi_R,inits_xi,opt);             
+toc
+
+s_jmt_third_xi_R(k,:) = sharescalculator_RC_counterfactual(p_jmt_third_xi_R(k,:)',third_xi_R(k,:));
+
+end
+
+%% Calculation of profits for new entrant firm - rivals:
+
+baseline_firstbrand_profits = 0;                                           % The good is missing at baseline so it's 0
+baseline_rivals_profits = sum((p_jmt(1:J-2,:) - mc_J(1:J-2,:)).*s_jmt(1:J-2,:));  
+                                                                           % This gives the sum of rival firm profits for M=1&T=1 in baseline specification.
+
+mc_estim = mc_est';                                                        % Transpozing for dimensional matching
+
+profits_first_xi = (p_jmt_first_xi - mc_estim).*s_jmt_first_xi;            % This gives the profits for all 5 goods in first counterfactual
+firstbrand_profits_first_xi = mean(profits_first_xi(:,1));                 % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+                                                                           % specification for the first xi
+rivals_profits_first_xi     = mean(sum(profits_first_xi(:,2:end),2));      % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for the first xi
+
+profits_second_xi = (p_jmt_second_xi - mc_estim).*s_jmt_second_xi;         % This gives the profits for all 5 goods in second counterfactual
+firstbrand_profits_second_xi = mean(profits_second_xi(:,1));               % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+                                                                           % specification for the second xi
+rivals_profits_second_xi     = mean(sum(profits_second_xi(:,2:end),2));    % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for the second xi
+
+profits_third_xi = (p_jmt_third_xi - mc_estim).*s_jmt_third_xi;            % This gives the profits for all 5 goods in third counterfactual
+firstbrand_profits_third_xi = mean(profits_third_xi(:,1));                 % This gives the MEAN of the third brand for M=1&T=1 in counterfactual
+                                                                           % specification for the third xi
+rivals_profits_third_xi     = mean(sum(profits_third_xi(:,2:end),2));      % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for the third xi
+                                                                           
+profits_first_xi_M = (p_jmt_first_xi_M - mc_est).*s_jmt_first_xi_M;
+firstbrand_profits_first_xi_M = profits_first_xi_M(1,:);
+rivals_profits_first_xi_M = sum(profits_first_xi_M(2:end,:));
+
+
+profits_second_xi_M = (p_jmt_second_xi_M - mc_est).*s_jmt_second_xi_M;
+firstbrand_profits_second_xi_M = profits_second_xi_M(1,:);
+rivals_profits_second_xi_M = sum(profits_second_xi_M(2:end,:));
+
+
+profits_third_xi_M = (p_jmt_third_xi_M - mc_est).*s_jmt_third_xi_M;
+firstbrand_profits_third_xi_M = profits_third_xi_M(1,:);
+rivals_profits_third_xi_M = sum(profits_third_xi_M(2:end,:));
+
+
+
+profits_first_xi_R = (p_jmt_first_xi_R - mc_estim).*s_jmt_first_xi_R;      % This gives the profits for all 5 goods in first counterfactual
+firstbrand_profits_first_xi_R = mean(profits_first_xi_R(:,1));             % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+                                                                           % specification for the first xi (REAL ONE)
+rivals_profits_first_xi_R     = mean(sum(profits_first_xi_R(:,2:end),2));  % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for the first xi (REAL ONE)
+
+profits_second_xi_R = (p_jmt_second_xi_R - mc_estim).*s_jmt_second_xi_R;   % This gives the profits for all 5 goods in second counterfactual
+firstbrand_profits_second_xi_R = mean(profits_second_xi_R(:,1));           % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+                                                                           % specification for the second xi (REAL ONE)
+rivals_profits_second_xi_R     = mean(sum(profits_second_xi_R(:,2:end),2));% This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for the second xi (REAL ONE)
+
+profits_third_xi_R = (p_jmt_third_xi_R - mc_estim).*s_jmt_third_xi_R;      % This gives the profits for all 5 goods in third counterfactual
+firstbrand_profits_third_xi_R = mean(profits_third_xi_R(:,1));             % This gives the MEAN of the third brand for M=1&T=1 in counterfactual
+                                                                           % specification for the third xi (REAL ONE)
+rivals_profits_third_xi_R     = mean(sum(profits_third_xi_R(:,2:end),2));  % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for the third xi (REAL ONE)
+
+%% Calculation for consumer surplus:
+
+
+
+
 
 
