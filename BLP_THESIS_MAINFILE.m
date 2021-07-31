@@ -237,24 +237,23 @@ se_xi=sqrt(diag(cov_xi));                                                  % Thi
 first_index  = [J-1:J-1:(J-1)*(M*T-1)]';
 second_index = [J-1:J-1:(J-1)*(M-1)]';
 
+%% Constructing the different xi's:
 
 first_xi    = xi_J(first_index,:);
 second_xi   = xi_J(second_index,:);
 
-
-% Now I use the regression to get an estimate of those xi values:
+% Now I use the regression estimates of those xi values:
 
 xx       = normrnd(estims_xi(1,:),se_xi(1,:),J-1,1);                                            
 mm       = normrnd(estims_xi(2,:),se_xi(2,:),M,1);                           
-tt       = normrnd(estims_xi(3,:),se_xi(3,:),T,1);                                            
-noise    = normrnd(0,0.5,J-1,M,T);                                     
+tt       = normrnd(estims_xi(3,:),se_xi(3,:),T,1);                                                                               
 
 xi_jmt_estimreconstructed  = zeros(J-1,M,T);
 
 for   j = 1:J-1
   for market = 1:M
     for time = 1:T
-        xi_jmt_estimreconstructed(j,market,time) = xx(j,1) + mm(market,1) + tt(time,1) + noise(j,market,time);
+        xi_jmt_estimreconstructed(j,market,time) = xx(j,1) + mm(market,1) + tt(time,1);
     end
   end
 end
@@ -276,9 +275,6 @@ alpha_est = -X_J(5,:);
 sigma_est =  X_J(6,:);
 gamma_est =  X_J(7:end,:);
 mc_est    = [[1 w_111]*gamma_est+base_omega_jmt(1,:); mc_J(1:J-2)];  
-
-
-
 
 %% Herein, I start solving for new eq. prices & shares for first and second xi specifications:
 
@@ -458,7 +454,7 @@ CS_baseline = exp(CS_baseline);
 CS_baseline = sum(CS_baseline,1);
 CS_baseline = log(CS_baseline);
 CS_baseline = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_baseline;
-CS_baseline = mean(CS_baseline);   % Negative -> C is negative
+CS_baseline = sum(CS_baseline);   % Negative -> C is negative
 
 CS_first_xi = zeros(J-1,I,size(first_xi,1));
 for i = 1:I
@@ -471,7 +467,7 @@ CS_first_xi = exp(CS_first_xi);
 CS_first_xi = sum(CS_first_xi,1);
 CS_first_xi = log(CS_first_xi);
 CS_first_xi = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi;
-CS_first_xi = mean(CS_first_xi);
+CS_first_xi = sum(CS_first_xi);
 CS_first_xi = mean(CS_first_xi);
 CS_first_xi = CS_first_xi - CS_baseline;
 
@@ -486,7 +482,7 @@ CS_second_xi = exp(CS_second_xi);
 CS_second_xi = sum(CS_second_xi,1);
 CS_second_xi = log(CS_second_xi);
 CS_second_xi = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi;
-CS_second_xi = mean(CS_second_xi);
+CS_second_xi = sum(CS_second_xi);
 CS_second_xi = mean(CS_second_xi);
 CS_second_xi = CS_second_xi - CS_baseline;
 
@@ -499,7 +495,7 @@ CS_first_xi_M = exp(CS_first_xi_M);
 CS_first_xi_M = sum(CS_first_xi_M,1);
 CS_first_xi_M = log(CS_first_xi_M);
 CS_first_xi_M = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi_M;
-CS_first_xi_M = mean(CS_first_xi_M); 
+CS_first_xi_M = sum(CS_first_xi_M); 
 CS_first_xi_M = CS_first_xi_M - CS_baseline;
 
 CS_second_xi_M = zeros(J-1,I);
@@ -511,7 +507,7 @@ CS_second_xi_M = exp(CS_second_xi_M);
 CS_second_xi_M = sum(CS_second_xi_M,1);
 CS_second_xi_M = log(CS_second_xi_M);
 CS_second_xi_M = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi_M;
-CS_second_xi_M = mean(CS_second_xi_M); 
+CS_second_xi_M = sum(CS_second_xi_M); 
 CS_second_xi_M = CS_second_xi_M - CS_baseline;
 
 CS_first_xi_regression = zeros(J-1,I,size(first_xi_regression,1));
@@ -525,7 +521,7 @@ CS_first_xi_regression = exp(CS_first_xi_regression);
 CS_first_xi_regression = sum(CS_first_xi_regression,1);
 CS_first_xi_regression = log(CS_first_xi_regression);
 CS_first_xi_regression = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi_regression;
-CS_first_xi_regression = mean(CS_first_xi_regression);
+CS_first_xi_regression = sum(CS_first_xi_regression);
 CS_first_xi_regression = mean(CS_first_xi_regression);
 CS_first_xi_regression = CS_first_xi_regression - CS_baseline;
 
@@ -540,7 +536,7 @@ CS_second_xi_regression = exp(CS_second_xi_regression);
 CS_second_xi_regression = sum(CS_second_xi_regression,1);
 CS_second_xi_regression = log(CS_second_xi_regression);
 CS_second_xi_regression = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi_regression;
-CS_second_xi_regression = mean(CS_second_xi_regression);
+CS_second_xi_regression = sum(CS_second_xi_regression);
 CS_second_xi_regression = mean(CS_second_xi_regression);
 CS_second_xi_regression = CS_second_xi_regression - CS_baseline;
 
@@ -555,7 +551,7 @@ CS_first_xi_R = exp(CS_first_xi_R);
 CS_first_xi_R = sum(CS_first_xi_R,1);
 CS_first_xi_R = log(CS_first_xi_R);
 CS_first_xi_R = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi_R;
-CS_first_xi_R = mean(CS_first_xi_R);
+CS_first_xi_R = sum(CS_first_xi_R);
 CS_first_xi_R = mean(CS_first_xi_R);
 CS_first_xi_R = CS_first_xi_R - CS_baseline;
 
@@ -570,6 +566,6 @@ CS_second_xi_R = exp(CS_second_xi_R);
 CS_second_xi_R = sum(CS_second_xi_R,1);
 CS_second_xi_R = log(CS_second_xi_R);
 CS_second_xi_R = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi_R;
-CS_second_xi_R = mean(CS_second_xi_R);
+CS_second_xi_R = sum(CS_second_xi_R);
 CS_second_xi_R = mean(CS_second_xi_R);
 CS_second_xi_R = CS_second_xi_R - CS_baseline;
