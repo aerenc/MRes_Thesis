@@ -210,237 +210,190 @@ clear Grad2 Grad3 varianceestQ2D sterrorsQ2D varianceestQ2S sterrorsQ2S s_ijmt d
 % Here, I insert the "missing" first good in M=1&T=1 to that market itself
 % to check new prices, shares, profits, and CS:
 
-x_111 = base_x_jmt(1,:);
-w_111 = base_w_jmt(1,:);
+x_111                = base_x_jmt(1,:);
+w_111                = base_w_jmt(1,:);
 
-xxx            = zeros(Total-M*T-one,1);                                   % Brand dummies
-xxx(1:J-2,:)   = [2 3 4 5]';
-xxx(J-1:end,:) = repmat([1 2 3 4 5]',M*T-1,1);
+xxx                  = zeros(Total-M*T-one,1);                             % Brand raw dummies (not adjusted)
+xxx(1:J-2,:)         = [2 3 4 5]';
+xxx(J-1:end,:)       = repmat([1 2 3 4 5]',M*T-1,1);
 
-mmm                  = zeros(Total-M*T-one,1);                             % Market dummies
+mmm                  = zeros(Total-M*T-one,1);                             % Market raw dummies (not adjusted)
 mmm(1:J-2,:)         = [1 1 1 1]';
 mmm(J-1:(J-1)*M-1,:) = repelem([2:1:20]',(J-1),1);
 mmm((J-1)*M:end,:)   = repmat(repelem([1:1:M]',(J-1),1),(T-1),1);
 
-ttt                  = zeros(Total-M*T-one,1);                             % Time dummies
+ttt                  = zeros(Total-M*T-one,1);                             % Time raw dummies (not adjusted)
 ttt(1:(J-1)*M-1,:)   = 1 ;
 ttt((J-1)*M:end,:)   = repelem ([2:1:T]',(J-1)*M,1);
 
-X_xi      = [xxx mmm ttt];                                                 % Stacking regressors together
-estims_xi = (X_xi'*X_xi)\X_xi'*xi_J;                                       % Classical OLS formula giving us regression estimates for xi regression that researcher does
-wololoo   = xi_J - X_xi * estims_xi ;                                      
-nnn=size(X_xi,1);
-kkk=size(X_xi,2);
-cov_xi=(wololoo'*wololoo/(nnn-kkk))*inv(X_xi'*X_xi);  
-se_xi=sqrt(diag(cov_xi));                                                  % This identifies \sigma_x, \sigma_m and \sigma_t
+X_xi                 = get_Dummies (xxx,mmm,ttt);                          % Stacking dummy regressors together
 
-first_index  = [J-1:J-1:(J-1)*(M*T-1)]';
-second_index = [J-1:J-1:(J-1)*(M-1)]';
+estims_xi            = (X_xi'*X_xi)\X_xi'*xi_J;                            % Classical OLS formula giving us regression estimates for xi regression that researcher does
+wololoo              = xi_J - X_xi * estims_xi ;                                      
+nnn                  = size(X_xi,1);
+kkk                  = size(X_xi,2);
+cov_xi               = (wololoo'*wololoo/(nnn-kkk))*inv(X_xi'*X_xi);  
+se_xi                = sqrt(diag(cov_xi));                                 % This identifies \sigma_x, \sigma_m and \sigma_t; standard deviation of residuals
+
+first_index          = [J-1:J-1:(J-1)*(M*T-1)]';
+second_index         = [J-1:J-1:(J-1)*(M-1)]';
 
 %% Constructing the different xi's:
 
-first_xi    = xi_J(first_index,:);
-second_xi   = xi_J(second_index,:);
+first_xi            = xi_J(first_index,:);
+second_xi           = xi_J(second_index,:);
 
-% Now I use the regression estimates of those xi values:
+first_xi_M          = mean(first_xi);
+second_xi_M         = mean(second_xi);
 
-xx       = normrnd(estims_xi(1,:),se_xi(1,:),J-1,1);                                            
-mm       = normrnd(estims_xi(2,:),se_xi(2,:),M,1);                           
-tt       = normrnd(estims_xi(3,:),se_xi(3,:),T,1);                                                                               
+regression_xi_naive = estims_xi(1,:) + estims_xi(6,:) + estims_xi(25,:);
+regression_xi       = normrnd(estims_xi(1,:),se_xi(1,:),50,1) + normrnd(estims_xi(6,:),se_xi(6,:),50,1) + normrnd(estims_xi(25,:),se_xi(25,:),50,1);
 
-xi_jmt_estimreconstructed  = zeros(J-1,M,T);
+real_xi             = base_xi_jmt(1,:);
 
-for   j = 1:J-1
-  for market = 1:M
-    for time = 1:T
-        xi_jmt_estimreconstructed(j,market,time) = xx(j,1) + mm(market,1) + tt(time,1);
-    end
-  end
-end
-
-xi_jmt_estimreconstructed               = xi_jmt_estimreconstructed(:);                                        
-xi_jmt_estimreconstructed               = xi_jmt_estimreconstructed(2:end,:);
-
-first_xi_regression  = xi_jmt_estimreconstructed(first_index,:);
-second_xi_regression = xi_jmt_estimreconstructed(second_index,:);
-
-first_xi_R  = xi_jmt(first_index,:);
-second_xi_R = xi_jmt(second_index,:);
-
-first_xi_M  = mean(first_xi);
-second_xi_M = mean(second_xi);
-
-beta_est  =  X_J(1:4,:);
-alpha_est = -X_J(5,:);
-sigma_est =  X_J(6,:);
-gamma_est =  X_J(7:end,:);
-mc_est    = [[1 w_111]*gamma_est+base_omega_jmt(1,:); mc_J(1:J-2)];  
+beta_est            =  X_J(1:4,:);
+alpha_est           = -X_J(5,:);
+sigma_est           =  X_J(6,:);
+gamma_est           =  X_J(7:end,:);
+mc_est              = [[1 w_111]*gamma_est+base_omega_jmt(1,:); mc_J(1:J-2)];  
 
 %% Herein, I start solving for new eq. prices & shares for first and second xi specifications:
 
-inits_xi = ones(J-1,1);
+inits_xi                           = ones(J-1,1);
 
 for k = 1: size(first_xi,1)
     
-solveforprices_first_xi    = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi(k,:)) - mc_est);
+solveforprices_first_xi            = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi(k,:)) - mc_est);
     
 tic
 p_jmt_first_xi(k,:)                = fsolve(solveforprices_first_xi,inits_xi,opt);             
 toc
 
-s_jmt_first_xi(k,:) = sharescalculator_RC_counterfactual(p_jmt_first_xi(k,:)',first_xi(k,:));
+s_jmt_first_xi(k,:)                = sharescalculator_RC_counterfactual(p_jmt_first_xi(k,:)',first_xi(k,:));
 
 end
 
 for k = 1: size(second_xi,1)
     
-solveforprices_second_xi    = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi(k,:)) - mc_est);
+solveforprices_second_xi           = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi(k,:)) - mc_est);
     
 tic
-p_jmt_second_xi(k,:)                = fsolve(solveforprices_second_xi,inits_xi,opt);             
+p_jmt_second_xi(k,:)               = fsolve(solveforprices_second_xi,inits_xi,opt);             
 toc
 
-s_jmt_second_xi(k,:) = sharescalculator_RC_counterfactual(p_jmt_second_xi(k,:)',second_xi(k,:));
+s_jmt_second_xi(k,:)               = sharescalculator_RC_counterfactual(p_jmt_second_xi(k,:)',second_xi(k,:));
 
 end
 
 %% Now calculate the new equilibrium prices and shares for the MEAN of those xi specifications:
 
-solveforprices_first_xi_M    = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi_M) - mc_est);
+solveforprices_first_xi_M          = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi_M) - mc_est);
     
 tic
-p_jmt_first_xi_M          = fsolve(solveforprices_first_xi_M,inits_xi,opt);             
+p_jmt_first_xi_M                   = fsolve(solveforprices_first_xi_M,inits_xi,opt);             
 toc
 
-s_jmt_first_xi_M = sharescalculator_RC_counterfactual(p_jmt_first_xi_M,first_xi_M);
+s_jmt_first_xi_M                   = sharescalculator_RC_counterfactual(p_jmt_first_xi_M,first_xi_M);
 
 
-solveforprices_second_xi_M    = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi_M) - mc_est);
+solveforprices_second_xi_M         = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi_M) - mc_est);
     
 tic
-p_jmt_second_xi_M          = fsolve(solveforprices_second_xi_M,inits_xi,opt);             
+p_jmt_second_xi_M                  = fsolve(solveforprices_second_xi_M,inits_xi,opt);             
 toc
 
-s_jmt_second_xi_M = sharescalculator_RC_counterfactual(p_jmt_first_xi_M,second_xi_M);
+s_jmt_second_xi_M                  = sharescalculator_RC_counterfactual(p_jmt_second_xi_M,second_xi_M);
 
-%% Now I use the regression values as an estimate of first xi and second xi:
+%% Now I use the regression values (naive and general draw):
 
-for k = 1: size(first_xi_regression,1)
-    
-solveforprices_first_xi_regression    = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi_regression(k,:)) - mc_est);
+solveforprices_regression_xi_naive = @(pppp) (pppp -shares_RC_counterfactual(pppp,regression_xi_naive) - mc_est);
     
 tic
-p_jmt_first_xi_regression(k,:)                = fsolve(solveforprices_first_xi_regression,inits_xi,opt);             
+p_jmt_regression_xi_naive          = fsolve(solveforprices_regression_xi_naive,inits_xi,opt);             
 toc
 
-s_jmt_first_xi_regression(k,:) = sharescalculator_RC_counterfactual(p_jmt_first_xi_regression(k,:)',first_xi_regression(k,:));
+s_jmt_regression_xi_naive          = sharescalculator_RC_counterfactual(p_jmt_regression_xi_naive,regression_xi_naive);
+
+
+for k = 1: size(regression_xi,1)
+    
+solveforprices_regression_xi       = @(pppp) (pppp -shares_RC_counterfactual(pppp,regression_xi(k,:)) - mc_est);
+    
+tic
+p_jmt_regression_xi(k,:)           = fsolve(solveforprices_regression_xi,inits_xi,opt);             
+toc
+
+s_jmt_regression_xi(k,:)           = sharescalculator_RC_counterfactual(p_jmt_regression_xi(k,:)',regression_xi(k,:));
 
 end
 
-for k = 1: size(second_xi_regression,1)
-    
-solveforprices_second_xi_regression    = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi_regression(k,:)) - mc_est);
-    
-tic
-p_jmt_second_xi_regression(k,:)        = fsolve(solveforprices_second_xi_regression,inits_xi,opt);             
-toc
-
-s_jmt_second_xi_regression(k,:) = sharescalculator_RC_counterfactual(p_jmt_second_xi_regression(k,:)',second_xi_regression(k,:));
-
-end
 
 %% Lastly, calculate those profits & shares for the REAL values of xi:
 
-for k = 1: size(first_xi_R,1)
-    
-solveforprices_first_xi_R    = @(pppp) (pppp -shares_RC_counterfactual(pppp,first_xi_R(k,:)) - mc_est);
-    
-tic
-p_jmt_first_xi_R(k,:)                = fsolve(solveforprices_first_xi_R,inits_xi,opt);             
-toc
 
-s_jmt_first_xi_R(k,:) = sharescalculator_RC_counterfactual(p_jmt_first_xi_R(k,:)',first_xi_R(k,:));
-
-end
-
-for k = 1: size(second_xi_R,1)
-    
-solveforprices_second_xi_R    = @(pppp) (pppp -shares_RC_counterfactual(pppp,second_xi_R(k,:)) - mc_est);
+solveforprices_R                   = @(pppp) (pppp -shares_RC_counterfactual(pppp,real_xi) - mc_est);
     
 tic
-p_jmt_second_xi_R(k,:)                = fsolve(solveforprices_second_xi_R,inits_xi,opt);             
+p_jmt_R                            = fsolve(solveforprices_R,inits_xi,opt);             
 toc
 
-s_jmt_second_xi_R(k,:) = sharescalculator_RC_counterfactual(p_jmt_second_xi_R(k,:)',second_xi_R(k,:));
+s_jmt_R                            = sharescalculator_RC_counterfactual(p_jmt_R,real_xi);
 
-end
 
-%% Calculation of profits for new entrant firm - rivals: IN TOTAL THERE WILL BE 8 DIFFERENT ONES:
+%% Calculation of profits for new entrant firm - rivals:
 
-firstbrand_profits_baseline  = 0;                                          % The good is missing at baseline so it's 0
-rivals_profits_baseline      = sum((p_jmt(1:J-2,:) - mc_J(1:J-2,:)).*s_jmt(1:J-2,:));  
+firstbrand_profits_baseline        = 0;                                    % The good is missing at baseline so it's 0
+rivals_profits_baseline            = sum((p_jmt(1:J-2,:) - mc_J(1:J-2,:)).*s_jmt(1:J-2,:));  
                                                                            % This gives the sum of rival firm profits for M=1&T=1 in baseline specification.
 
                                                 
-mc_estim                     = mc_est';                                    % Transpozing for dimensional matching
+mc_estim                           = mc_est';                              % Transpozing for dimensional matching
 
-profits_first_xi             = (p_jmt_first_xi - mc_estim).*s_jmt_first_xi;% This gives the profits for all 5 goods in first counterfactual
-firstbrand_profits_first_xi  = mean(profits_first_xi(:,1));                % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+profits_first_xi                   = (p_jmt_first_xi - mc_estim).*s_jmt_first_xi;% This gives the profits for all 5 goods in first counterfactual
+firstbrand_profits_first_xi        = mean(profits_first_xi(:,1));              % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
                                                                            % specification for the first xi
-rivals_profits_first_xi      = mean(sum(profits_first_xi(:,2:end),2));     % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+rivals_profits_first_xi            = mean(sum(profits_first_xi(:,2:end),2));   % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
                                                                            % counterfactual specification for the first xi
 
-profits_second_xi            = (p_jmt_second_xi - mc_estim).*s_jmt_second_xi;     
+profits_second_xi                  = (p_jmt_second_xi - mc_estim).*s_jmt_second_xi;     
                                                                            % This gives the profits for all 5 goods in second counterfactual
 
-firstbrand_profits_second_xi = mean(profits_second_xi(:,1));               % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+firstbrand_profits_second_xi       = mean(profits_second_xi(:,1));         % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
                                                                            % specification for the second xi
-rivals_profits_second_xi     = mean(sum(profits_second_xi(:,2:end),2));    % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+rivals_profits_second_xi           = mean(sum(profits_second_xi(:,2:end),2));% This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
                                                                            % counterfactual specification for the second xi
 
+                                                                                                                                                     
+profits_regression_xi              = (p_jmt_regression_xi - mc_estim).*s_jmt_regression_xi;     
+                                                                           % This gives the profits for all 5 goods in second counterfactual
+
+firstbrand_profits_regression_xi   = mean(profits_regression_xi(:,1));% This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+                                                                           % specification for "complete" "REGRESSION"
+rivals_profits_regression_xi       = mean(sum(profits_regression_xi(:,2:end),2)); % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for "complete" "REGRESSION"
+
+
                                                                            
-profits_first_xi_M            = (p_jmt_first_xi_M - mc_est).*s_jmt_first_xi_M;
-firstbrand_profits_first_xi_M = profits_first_xi_M(1,:);
-rivals_profits_first_xi_M     = sum(profits_first_xi_M(2:end,:));
+profits_first_xi_M                      = (p_jmt_first_xi_M - mc_est).*s_jmt_first_xi_M;
+firstbrand_profits_first_xi_M           = profits_first_xi_M(1,:);
+rivals_profits_first_xi_M               = sum(profits_first_xi_M(2:end,:));
 
 
-profits_second_xi_M            = (p_jmt_second_xi_M - mc_est).*s_jmt_second_xi_M;
-firstbrand_profits_second_xi_M = profits_second_xi_M(1,:);
-rivals_profits_second_xi_M     = sum(profits_second_xi_M(2:end,:));
+profits_second_xi_M                     = (p_jmt_second_xi_M - mc_est).*s_jmt_second_xi_M;
+firstbrand_profits_second_xi_M          = profits_second_xi_M(1,:);
+rivals_profits_second_xi_M              = sum(profits_second_xi_M(2:end,:));
 
 
-profits_first_xi_regression             = (p_jmt_first_xi_regression - mc_estim).*s_jmt_first_xi_regression;% This gives the profits for all 5 goods in first counterfactual
-firstbrand_profits_first_xi_regression  = mean(profits_first_xi_regression(:,1));   % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
+profits_regression_xi_naive             = (p_jmt_regression_xi_naive - mc_est).*s_jmt_regression_xi_naive;% This gives the profits for all 5 goods in first counterfactual
+firstbrand_profits_regression_xi_naive  = profits_regression_xi_naive(1,:);   % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
                                                                            % specification for the first xi "REGRESSION"
-rivals_profits_first_xi_regression      = mean(sum(profits_first_xi_regression(:,2:end),2));     % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
-                                                                           % counterfactual specification for the first xi "REGRESSION"
-
-profits_second_xi_regression            = (p_jmt_second_xi_regression - mc_estim).*s_jmt_second_xi_regression;     
-                                                                           % This gives the profits for all 5 goods in second counterfactual
-
-firstbrand_profits_second_xi_regression = mean(profits_second_xi_regression(:,1));               % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
-                                                                           % specification for the second xi "REGRESSION"
-rivals_profits_second_xi_regression     = mean(sum(profits_second_xi_regression(:,2:end),2));    % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
-                                                                           % counterfactual specification for the second xi "REGRESSION"
-
-
-profits_first_xi_R             = (p_jmt_first_xi_R - mc_estim).*s_jmt_first_xi_R;      
-                                                                           % This gives the profits for all 5 goods in first counterfactual
+rivals_profits_regression_xi_naive      = sum(profits_regression_xi_naive(2:end,:));     % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
+                                                                           % counterfactual specification for the "naive" "REGRESSION"
                                                                            
-firstbrand_profits_first_xi_R  = mean(profits_first_xi_R(:,1));            % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
-                                                                           % specification for the first xi (REAL ONE)
-                                                                           
-rivals_profits_first_xi_R      = mean(sum(profits_first_xi_R(:,2:end),2)); % This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
-                                                                           % counterfactual specification for the first xi (REAL ONE)
+profits_R                               = (p_jmt_R - mc_est).*s_jmt_R;
+firstbrand_profits_R                    = profits_R(1,:);
+rivals_profits_R                        = sum(profits_R(2:end,:));
 
-profits_second_xi_R            = (p_jmt_second_xi_R - mc_estim).*s_jmt_second_xi_R;   
-                                                                           % This gives the profits for all 5 goods in second counterfactual
-
-firstbrand_profits_second_xi_R = mean(profits_second_xi_R(:,1));           % This gives the MEAN of the first brand for M=1&T=1 in counterfactual
-                                                                           % specification for the second xi (REAL ONE)
-                                                                           
-rivals_profits_second_xi_R     = mean(sum(profits_second_xi_R(:,2:end),2));% This gives the MEAN of the sum of rival firm profits for M=1&T=1 in 
-                                                                           % counterfactual specification for the second xi (REAL ONE)
 
 %% Calculation for consumer surplus:
 
@@ -486,6 +439,23 @@ CS_second_xi = sum(CS_second_xi);
 CS_second_xi = mean(CS_second_xi);
 CS_second_xi = CS_second_xi - CS_baseline;
 
+CS_regression_xi = zeros(J-1,I,size(regression_xi,1));
+for i = 1:I
+ for u = 1:size(regression_xi,1)
+CS_regression_xi(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
+    - alpha_est .* p_jmt_regression_xi(u,1:J-1)' + [regression_xi(u,1);xi_J(1:J-2,:)] - p_jmt_regression_xi(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
+ end
+end
+CS_regression_xi = exp(CS_regression_xi);
+CS_regression_xi = sum(CS_regression_xi,1);
+CS_regression_xi = log(CS_regression_xi);
+CS_regression_xi = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_regression_xi;
+CS_regression_xi = sum(CS_regression_xi);
+CS_regression_xi = mean(CS_regression_xi);
+CS_regression_xi = CS_regression_xi - CS_baseline;
+
+
+
 CS_first_xi_M = zeros(J-1,I);
 for i = 1:I
         CS_first_xi_M(1:J-1,i) = [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
@@ -510,62 +480,27 @@ CS_second_xi_M = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi_M;
 CS_second_xi_M = sum(CS_second_xi_M); 
 CS_second_xi_M = CS_second_xi_M - CS_baseline;
 
-CS_first_xi_regression = zeros(J-1,I,size(first_xi_regression,1));
+CS_regression_xi_naive = zeros(J-1,I);
 for i = 1:I
- for u = 1:size(first_xi_regression,1)
-CS_first_xi_regression(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_first_xi_regression(u,1:J-1)' + [first_xi_regression(u,1);xi_J(1:J-2,:)] - p_jmt_first_xi_regression(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
- end
+        CS_regression_xi_naive(1:J-1,i) = [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
+    - alpha_est .* p_jmt_regression_xi_naive(1:J-1,:) + [regression_xi_naive;xi_J(1:J-2,:)] - p_jmt_regression_xi_naive(1:J-1,:)*sigma_est*heterogeneity(1,i);                       
 end
-CS_first_xi_regression = exp(CS_first_xi_regression);
-CS_first_xi_regression = sum(CS_first_xi_regression,1);
-CS_first_xi_regression = log(CS_first_xi_regression);
-CS_first_xi_regression = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi_regression;
-CS_first_xi_regression = sum(CS_first_xi_regression);
-CS_first_xi_regression = mean(CS_first_xi_regression);
-CS_first_xi_regression = CS_first_xi_regression - CS_baseline;
+CS_regression_xi_naive = exp(CS_regression_xi_naive);
+CS_regression_xi_naive = sum(CS_regression_xi_naive,1);
+CS_regression_xi_naive = log(CS_regression_xi_naive);
+CS_regression_xi_naive = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_regression_xi_naive;
+CS_regression_xi_naive = sum(CS_regression_xi_naive); 
+CS_regression_xi_naive = CS_regression_xi_naive - CS_baseline;
 
-CS_second_xi_regression = zeros(J-1,I,size(second_xi_regression,1));
+CS_R = zeros(J-1,I);
 for i = 1:I
- for u = 1:size(second_xi_regression,1)
-CS_second_xi_regression(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_second_xi_regression(u,1:J-1)' + [second_xi_regression(u,1);xi_J(1:J-2,:)] - p_jmt_second_xi_regression(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
- end
+        CS_R(1:J-1,i) = [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
+    - alpha_est .* p_jmt_R(1:J-1,:) + [real_xi;xi_J(1:J-2,:)] - p_jmt_R(1:J-1,:)*sigma_est*heterogeneity(1,i);                       
 end
-CS_second_xi_regression = exp(CS_second_xi_regression);
-CS_second_xi_regression = sum(CS_second_xi_regression,1);
-CS_second_xi_regression = log(CS_second_xi_regression);
-CS_second_xi_regression = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi_regression;
-CS_second_xi_regression = sum(CS_second_xi_regression);
-CS_second_xi_regression = mean(CS_second_xi_regression);
-CS_second_xi_regression = CS_second_xi_regression - CS_baseline;
+CS_R = exp(CS_R);
+CS_R = sum(CS_R,1);
+CS_R = log(CS_R);
+CS_R = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_R;
+CS_R = sum(CS_R); 
+CS_R = CS_R - CS_baseline;
 
-CS_first_xi_R = zeros(J-1,I,size(first_xi_R,1));
-for i = 1:I
- for u = 1:size(first_xi_R,1)
-CS_first_xi_R(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_first_xi_R(u,1:J-1)' + [first_xi_R(u,1);xi_J(1:J-2,:)] - p_jmt_first_xi_R(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
- end
-end
-CS_first_xi_R = exp(CS_first_xi_R);
-CS_first_xi_R = sum(CS_first_xi_R,1);
-CS_first_xi_R = log(CS_first_xi_R);
-CS_first_xi_R = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi_R;
-CS_first_xi_R = sum(CS_first_xi_R);
-CS_first_xi_R = mean(CS_first_xi_R);
-CS_first_xi_R = CS_first_xi_R - CS_baseline;
-
-CS_second_xi_R = zeros(J-1,I,size(second_xi_R,1));
-for i = 1:I
- for u = 1:size(second_xi_R,1)
-CS_second_xi_R(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_second_xi_R(u,1:J-1)' + [second_xi_R(u,1);xi_J(1:J-2,:)] - p_jmt_second_xi_R(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
- end
-end
-CS_second_xi_R = exp(CS_second_xi_R);
-CS_second_xi_R = sum(CS_second_xi_R,1);
-CS_second_xi_R = log(CS_second_xi_R);
-CS_second_xi_R = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi_R;
-CS_second_xi_R = sum(CS_second_xi_R);
-CS_second_xi_R = mean(CS_second_xi_R);
-CS_second_xi_R = CS_second_xi_R - CS_baseline;
