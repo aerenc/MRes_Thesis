@@ -210,7 +210,6 @@ clear Grad2 Grad3 varianceestQ2D sterrorsQ2D varianceestQ2S sterrorsQ2S s_ijmt d
 % Here, I insert the "missing" first good in M=1&T=1 to that market itself
 % to check new prices, shares, profits, and CS:
 
-x_111                = base_x_jmt(1,:);
 w_111                = base_w_jmt(1,:);
 
 xxx                  = zeros(Total-M*T-one,1);                             % Brand raw dummies (not adjusted)
@@ -246,8 +245,8 @@ second_xi           = xi_J(second_index,:);
 first_xi_M          = mean(first_xi);
 second_xi_M         = mean(second_xi);
 
-regression_xi_naive = estims_xi(1,:) + estims_xi(6,:) + estims_xi(25,:);
-regression_xi       = normrnd(estims_xi(1,:),se_xi(1,:),50,1) + normrnd(estims_xi(6,:),se_xi(6,:),50,1) + normrnd(estims_xi(25,:),se_xi(25,:),50,1);
+regression_xi_naive = estims_xi(1,:);
+regression_xi       = normrnd(estims_xi(1,:),se_xi(1,:),100,1);
 
 real_xi             = base_xi_jmt(1,:);
 
