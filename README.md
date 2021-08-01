@@ -1,3 +1,5 @@
 # RM_Thesis
 
-# MATLAB code written for RM thesis in EOR CentER - Tilburg University 2021
+# MATLAB code written for RM Thesis in EOR 
+# CentER - Tilburg University 
+# 2021
