@@ -74,8 +74,8 @@ ttt_10  = double(ttt_10);
 % I left j =5 ; m=20 ; t=10 outside to get away from multicollinearity:
 
 xxxx    = [xxx_1 xxx_2 xxx_3 xxx_4 xxx_5];
-mmmm    = [mmm_1 mmm_2 mmm_3 mmm_4 mmm_5 mmm_6 mmm_7 mmm_8 mmm_9 mmm_10 mmm_11 mmm_12 mmm_13 mmm_14 mmm_15 mmm_16 mmm_17 mmm_18 mmm_19];
-tttt    = [ttt_1 ttt_2 ttt_3 ttt_4 ttt_5 ttt_6 ttt_7 ttt_8 ttt_9];
+mmmm    = [mmm_2 mmm_3 mmm_4 mmm_5 mmm_6 mmm_7 mmm_8 mmm_9 mmm_10 mmm_11 mmm_12 mmm_13 mmm_14 mmm_15 mmm_16 mmm_17 mmm_18 mmm_19 mmm_20];
+tttt    = [ttt_2 ttt_3 ttt_4 ttt_5 ttt_6 ttt_7 ttt_8 ttt_9 ttt_10];
 
 X_xi    = [xxxx mmmm tttt];                                                % Stacking regressors together
 
