@@ -91,10 +91,11 @@ clear cumsum_s_jmt cumsum_s_jmt_1 marketwisesum_s_jmt
 
 %% A) OLS ESTIMATION OF HOMOGENEOUS LOGIT MODEL FOR "REAL" DATA & OLS ESTIMATION OF FIRST STAGE IV FOR "REAL" DATA & 2SLS ESTIMATION OF HOMOGENEOUS LOGIT MODEL FOR "REAL" DATA:
 
-[OLSestimates,xi_jmt_error_logit,Twoslsestimatessecondstage,xi_jmt_error_twosls,se_ols,se_twosls] =...
+[OLSestimates,xi_jmt_error_logit,Twoslsestimatessecondstage,xi_jmt_error_twosls,se_ols,se_twosls,pvalue_ols,pvalue_twosls] =...
     Estimation_OLS_IV(Total,M,T,one,index3,s_jmt,s0_mt,x_jmt,p_jmt,w_jmt);    
                                                                            % This gives both OLS + IV estimates for "real" data
-                                                                                                                                                                                    
+
+                                                                           
 %% B) "BLP" (RC-LOGIT) ESTIMATION OF THE MODEL:
 
 %% B1) DEMAND ESTIMATION:
@@ -153,6 +154,12 @@ varianceest_d = pinv(Grad1'*W*Grad1)*Grad1'*W*(demandmoment*demandmoment')*W*Gra
 sterrors_d    = sqrt(diag(varianceest_d));                                 % Getting standard errors of estimated parameters
 
 clear Grad1 varianceest_d demandmoment xi_D
+
+n_X = size(X,1);
+k_X = size(X,2);
+
+pvalue_X=2*(1-tcdf(abs(X./sterrors_d),n_X-k_X));
+clear n_X k_X
 %% B2) JOINT ESTIMATION:
 
 Kmc     = 1+size(z,2);                                                     % =4 (constant & cost shifters) # of parameters in MC function
@@ -205,6 +212,12 @@ sterrorsQ2S     = sqrt(diag(varianceestQ2S));                              % Get
 sterrors_j      = [sterrorsQ2D; sterrorsQ2S];                              % Stacking demand-side & supply-side errors together
 
 clear Grad2 Grad3 varianceestQ2D sterrorsQ2D varianceestQ2S sterrorsQ2S s_ijmt ds_dp demandmoment_J supplymoment_J
+
+n_X_J = size(X_J,1);
+k_X_J = size(X_J,2);
+
+pvalue_X_J=2*(1-tcdf(abs(X_J./sterrors_j),n_X_J-k_X_J));
+clear n_X_J k_X_J
 %% 3 - COUNTERFACTUAL ANALYSIS:
 
 % Here, I insert the "missing" first good in M=1&T=1 to that market itself
@@ -396,110 +409,141 @@ rivals_profits_R                        = sum(profits_R(2:end,:));
 
 %% Calculation for consumer surplus:
 
-CS_baseline = zeros(J-2,I);
-for i = 1:I
+CS_baseline = zeros(J-2,ns);
+for i = 1:ns
         CS_baseline(1:J-2,i) = [ones(J-2,1) x_jmt(1:J-2,:)] * beta_est ...
-    - alpha_est .* p_jmt(1:J-2,:) + xi_J(1:J-2,:) - p_jmt(1:J-2,:)*sigma_est*heterogeneity(1,i);                       
+    - alpha_est .* p_jmt(1:J-2,:) + xi_J(1:J-2,:) - p_jmt(1:J-2,:)*sigma_est*v(1,i);                       
 
 end
 CS_baseline = exp(CS_baseline);
 CS_baseline = sum(CS_baseline,1);
 CS_baseline = log(CS_baseline);
-CS_baseline = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_baseline;
+CS_baseline = (1./(alpha_est + sigma_est.*v)).*CS_baseline;
 CS_baseline = sum(CS_baseline);   % Negative -> C is negative
 
-CS_first_xi = zeros(J-1,I,size(first_xi,1));
-for i = 1:I
+CS_first_xi = zeros(J-1,ns,size(first_xi,1));
+for i = 1:ns
  for u = 1:size(first_xi,1)
 CS_first_xi(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_first_xi(u,1:J-1)' + [first_xi(u,1);xi_J(1:J-2,:)] - p_jmt_first_xi(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
+    - alpha_est .* p_jmt_first_xi(u,1:J-1)' + [first_xi(u,1);xi_J(1:J-2,:)] - p_jmt_first_xi(u,1:J-1)'*sigma_est*v(1,i);      
  end
 end
 CS_first_xi = exp(CS_first_xi);
 CS_first_xi = sum(CS_first_xi,1);
 CS_first_xi = log(CS_first_xi);
-CS_first_xi = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi;
+CS_first_xi = (1./(alpha_est + sigma_est.*v)).*CS_first_xi;
 CS_first_xi = sum(CS_first_xi);
 CS_first_xi = mean(CS_first_xi);
 CS_first_xi = CS_first_xi - CS_baseline;
 
-CS_second_xi = zeros(J-1,I,size(second_xi,1));
-for i = 1:I
+CS_second_xi = zeros(J-1,ns,size(second_xi,1));
+for i = 1:ns
  for u = 1:size(second_xi,1)
 CS_second_xi(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_second_xi(u,1:J-1)' + [second_xi(u,1);xi_J(1:J-2,:)] - p_jmt_second_xi(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
+    - alpha_est .* p_jmt_second_xi(u,1:J-1)' + [second_xi(u,1);xi_J(1:J-2,:)] - p_jmt_second_xi(u,1:J-1)'*sigma_est*v(1,i);      
  end
 end
 CS_second_xi = exp(CS_second_xi);
 CS_second_xi = sum(CS_second_xi,1);
 CS_second_xi = log(CS_second_xi);
-CS_second_xi = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi;
+CS_second_xi = (1./(alpha_est + sigma_est.*v)).*CS_second_xi;
 CS_second_xi = sum(CS_second_xi);
 CS_second_xi = mean(CS_second_xi);
 CS_second_xi = CS_second_xi - CS_baseline;
 
-CS_regression_xi = zeros(J-1,I,size(regression_xi,1));
-for i = 1:I
+CS_regression_xi = zeros(J-1,ns,size(regression_xi,1));
+for i = 1:ns
  for u = 1:size(regression_xi,1)
 CS_regression_xi(1:J-1,i,u) =  [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_regression_xi(u,1:J-1)' + [regression_xi(u,1);xi_J(1:J-2,:)] - p_jmt_regression_xi(u,1:J-1)'*sigma_est*heterogeneity(1,i);      
+    - alpha_est .* p_jmt_regression_xi(u,1:J-1)' + [regression_xi(u,1);xi_J(1:J-2,:)] - p_jmt_regression_xi(u,1:J-1)'*sigma_est*v(1,i);      
  end
 end
 CS_regression_xi = exp(CS_regression_xi);
 CS_regression_xi = sum(CS_regression_xi,1);
 CS_regression_xi = log(CS_regression_xi);
-CS_regression_xi = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_regression_xi;
+CS_regression_xi = (1./(alpha_est + sigma_est.*v)).*CS_regression_xi;
 CS_regression_xi = sum(CS_regression_xi);
 CS_regression_xi = mean(CS_regression_xi);
 CS_regression_xi = CS_regression_xi - CS_baseline;
 
 
 
-CS_first_xi_M = zeros(J-1,I);
-for i = 1:I
+CS_first_xi_M = zeros(J-1,ns);
+for i = 1:ns
         CS_first_xi_M(1:J-1,i) = [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_first_xi_M(1:J-1,:) + [first_xi_M;xi_J(1:J-2,:)] - p_jmt_first_xi_M(1:J-1,:)*sigma_est*heterogeneity(1,i);                       
+    - alpha_est .* p_jmt_first_xi_M(1:J-1,:) + [first_xi_M;xi_J(1:J-2,:)] - p_jmt_first_xi_M(1:J-1,:)*sigma_est*v(1,i);                       
 end
 CS_first_xi_M = exp(CS_first_xi_M);
 CS_first_xi_M = sum(CS_first_xi_M,1);
 CS_first_xi_M = log(CS_first_xi_M);
-CS_first_xi_M = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_first_xi_M;
+CS_first_xi_M = (1./(alpha_est + sigma_est.*v)).*CS_first_xi_M;
 CS_first_xi_M = sum(CS_first_xi_M); 
 CS_first_xi_M = CS_first_xi_M - CS_baseline;
 
-CS_second_xi_M = zeros(J-1,I);
-for i = 1:I
+CS_second_xi_M = zeros(J-1,ns);
+for i = 1:ns
         CS_second_xi_M(1:J-1,i) = [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_second_xi_M(1:J-1,:) + [second_xi_M;xi_J(1:J-2,:)] - p_jmt_second_xi_M(1:J-1,:)*sigma_est*heterogeneity(1,i);                       
+    - alpha_est .* p_jmt_second_xi_M(1:J-1,:) + [second_xi_M;xi_J(1:J-2,:)] - p_jmt_second_xi_M(1:J-1,:)*sigma_est*v(1,i);                       
 end
 CS_second_xi_M = exp(CS_second_xi_M);
 CS_second_xi_M = sum(CS_second_xi_M,1);
 CS_second_xi_M = log(CS_second_xi_M);
-CS_second_xi_M = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_second_xi_M;
+CS_second_xi_M = (1./(alpha_est + sigma_est.*v)).*CS_second_xi_M;
 CS_second_xi_M = sum(CS_second_xi_M); 
 CS_second_xi_M = CS_second_xi_M - CS_baseline;
 
-CS_regression_xi_naive = zeros(J-1,I);
-for i = 1:I
+CS_regression_xi_naive = zeros(J-1,ns);
+for i = 1:ns
         CS_regression_xi_naive(1:J-1,i) = [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_regression_xi_naive(1:J-1,:) + [regression_xi_naive;xi_J(1:J-2,:)] - p_jmt_regression_xi_naive(1:J-1,:)*sigma_est*heterogeneity(1,i);                       
+    - alpha_est .* p_jmt_regression_xi_naive(1:J-1,:) + [regression_xi_naive;xi_J(1:J-2,:)] - p_jmt_regression_xi_naive(1:J-1,:)*sigma_est*v(1,i);                       
 end
 CS_regression_xi_naive = exp(CS_regression_xi_naive);
 CS_regression_xi_naive = sum(CS_regression_xi_naive,1);
 CS_regression_xi_naive = log(CS_regression_xi_naive);
-CS_regression_xi_naive = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_regression_xi_naive;
+CS_regression_xi_naive = (1./(alpha_est + sigma_est.*v)).*CS_regression_xi_naive;
 CS_regression_xi_naive = sum(CS_regression_xi_naive); 
 CS_regression_xi_naive = CS_regression_xi_naive - CS_baseline;
 
-CS_R = zeros(J-1,I);
-for i = 1:I
+CS_R = zeros(J-1,ns);
+for i = 1:ns
         CS_R(1:J-1,i) = [ones(J-1,1) base_x_jmt(1:J-1,:)] * beta_est ...
-    - alpha_est .* p_jmt_R(1:J-1,:) + [real_xi;xi_J(1:J-2,:)] - p_jmt_R(1:J-1,:)*sigma_est*heterogeneity(1,i);                       
+    - alpha_est .* p_jmt_R(1:J-1,:) + [real_xi;xi_J(1:J-2,:)] - p_jmt_R(1:J-1,:)*sigma_est*v(1,i);                       
 end
 CS_R = exp(CS_R);
 CS_R = sum(CS_R,1);
 CS_R = log(CS_R);
-CS_R = (1./(alpha_est + sigma_est.* heterogeneity)).*CS_R;
+CS_R = (1./(alpha_est + sigma_est.*v)).*CS_R;
 CS_R = sum(CS_R); 
 CS_R = CS_R - CS_baseline;
+
+
+
+%%
+
+
+histogram(p_jmt)
+title('Generated Equilibrium Prices for Mixed Logit Specification')                        
+xlabel('Values') 
+ylabel('Occurrences')
+
+histogram(s0_mt)
+title('Market-Level Shares of the Outside Option')                        
+xlabel('Values') 
+ylabel('Occurrences')
+
+histogram(xi_jmt)
+title('"Real" Unobserved Product Characteristics')                        
+xlabel('Values') 
+ylabel('Occurrences')
+
+histogram(xi_J)
+title('Estimated Unobserved Product Characteristics')                        
+xlabel('Values') 
+ylabel('Occurrences')
+
+plot(p_jmt - mc_J)
+title('Markups Coming from Joint BLP Estimation')                        
+xlabel('Indexes') 
+ylabel('Values')
+
 
