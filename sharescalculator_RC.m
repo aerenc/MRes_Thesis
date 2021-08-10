@@ -39,7 +39,7 @@ s__jmt            = nom./denom;                                            % Get
 
 s___jmt           = mean(s__jmt,2);
 
-inside_shares      = zeros(Total-M*T-1,1);                                  % Now, getting shares of inside goods
+inside_shares      = zeros(Total-M*T-1,1);                                 % Now, getting shares of inside goods
 
 for i = 1: M*T
 inside_shares(index3(i,1):index3(i,2))  = s___jmt(index2(i,1):index2(i,2),1);% Getting shares of inside goods
