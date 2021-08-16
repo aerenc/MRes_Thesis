@@ -1,5 +1,5 @@
-# RM_Thesis
+# MRes Thesis
 
-# MATLAB code written for RM Thesis in EOR 
+# MATLAB code written for Mres Thesis in Econometrics & Operations Research
 # CentER - Tilburg University 
 # 2021
