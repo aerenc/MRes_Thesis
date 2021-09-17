@@ -24,7 +24,7 @@ denom             = cums;
 s_ijmt            = nom./denom;                                            
 
 nom_general       = mean(s_ijmt,2);
-denom_general     = mean((alpha_est+sigma_est.*v).*s_ijmt.*(1-s_ijmt),2); %BURADAKI ALPHA NEGATIF AMA POZITIF OLMASI GEREK -> DONE
+denom_general     = mean((alpha_est+sigma_est.*v).*s_ijmt.*(1-s_ijmt),2);
 share_general     = nom_general./denom_general; 
 
 inside_s_jmt      = zeros(J-1,1);                  
