@@ -56,7 +56,7 @@ gg                = IV' * error_J;                                         % Mom
                                 
 alpha_i   = theta1(5,1).*ones(1,ns) - theta2(1,1).*v(1,:);         % Individual specific alpha term 
 
-RCderivative = zeros(Total-M*T-1,1);  % YOKSA MINUS MI KOYMAM GEREKIYOR "mean" IFADESININ BASINA??
+RCderivative = zeros(Total-M*T-1,1);
 for        j = 1:Total-M*T-1
            RCderivative(j,:) = mean(alpha_i.*simulatedshare(j,:).*(1 - simulatedshare(j,:))); % gathering ds/dp from RC elasticity definition
 end                           
