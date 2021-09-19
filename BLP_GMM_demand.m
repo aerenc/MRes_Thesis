@@ -6,10 +6,6 @@ global W tol_inner Kbeta iterativedelta v Indicator share IV A price constant g 
 theta1              = x0(1:Kbeta,1);                                       % Mean tastes
 theta2              = x0(Kbeta+1:end,1);                                   % Deviation from mean tastes
 
-% theta1 = rand(Kbeta,1);
-% theta2 = rand(Ktheta,1);
-
-
 ii                  = 0;
 norm_max            = 1;
 deltavalue          = iterativedelta;    %   ~999*1   matrix              % With this variable, we will be able to iterate and 
